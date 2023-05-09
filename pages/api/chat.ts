@@ -8,6 +8,7 @@ import wasm from '../../node_modules/@dqbd/tiktoken/lite/tiktoken_bg.wasm?module
 
 import tiktokenModel from '@dqbd/tiktoken/encoders/cl100k_base.json';
 import { Tiktoken, init } from '@dqbd/tiktoken/lite/init';
+import {data, getDataBySentence} from "@/services/avo/data";
 
 export const config = {
   runtime: 'edge',
@@ -40,7 +41,11 @@ const handler = async (req: Request): Promise<Response> => {
     let messagesToSend: Message[] = [];
 
     for (let i = messages.length - 1; i >= 0; i--) {
-      const message = messages[i];
+      let message = messages[i];
+      if (i ===  messages.length - 1) {
+        // Enhance message content with data based on prompt
+        message.content = `Data source:\`${getDataBySentence(message.content)}\`\nFrom now on, I will give you simple questions to cross reference from the above data source.\nQuestion:${message.content}`
+      }
       const tokens = encoding.encode(message.content);
 
       if (tokenCount + tokens.length + 1000 > model.tokenLimit) {
